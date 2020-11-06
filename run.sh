@@ -36,10 +36,14 @@ vault secrets enable -version=1 -path=secret -description='local secrets' kv
 # parse JSON array, populate Vault
 if [[ -f "$VAULT_SECRETS_FILE" ]]; then
   for path in $(jq -r 'keys[]' < "$VAULT_SECRETS_FILE"); do
-    jq -rj ".\"${path}\"" < "$VAULT_SECRETS_FILE" > /tmp/value
-    echo "writing value to secret/${path}"
-    vault write "secret/${path}" "value=@/tmp/value"
-    rm -f /tmp/value
+    value=$(jq -rj ".\"${path}\"" < "$VAULT_SECRETS_FILE")
+    type=$(jq -rj ".\"${path}\" | \"\(. | type)\"" < "$VAULT_SECRETS_FILE")
+    echo "writing ${type} value to ${path}"
+    if [ $type = 'object' ] || [ $type = 'array' ]; then
+      echo "$value" | vault write "${path}" -
+    else
+      echo "$value" | vault write "${path}" value=-
+    fi
   done
 else
   echo "$VAULT_SECRETS_FILE not found, skipping"

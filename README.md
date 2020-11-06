@@ -15,9 +15,11 @@ The format is an object associating a path with value, as follows:
 ```json
 {
   "secret/foo/bar": "baz",
-  "secret/something/else": "asdf1234"
+  "secret/something/else": {
+    "someKey": "someValue",
+    "anotherKey": "anotherValue"
+  }
 }
-
 ```
 
 Helm Chart
